@@ -1,7 +1,10 @@
 use skim::prelude::*;
+mod config;
 mod item;
 
 fn main() -> std::io::Result<()> {
+    config::init();
+
     let options = SkimOptionsBuilder::default()
         .height(Some("100%"))
         .multi(true)
