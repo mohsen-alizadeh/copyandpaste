@@ -1,0 +1,24 @@
+- title: vim delete from the cursor to the end of the line
+  tags:
+    - vim
+    - editor
+    - keymap
+  solution: d$
+
+
+- title: delete current buffer in vim
+  tags:
+    - vim
+    - editor
+    - keymap
+  solution: ":bd"
+
+- title: vim rename a buffer and file on disk simultaneously
+  tags:
+    - vim
+    - editor
+    - keymap
+
+  solution: ":Move"
+  required:
+    - "https://github.com/tpope/vim-eunuch"

@@ -1,0 +1,17 @@
+[package]
+name = "copyandpaste"
+version = "0.1.0"
+authors = ["Mohsen Alizadeh <mohsen@alizadeh.us>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+yaml-rust = "0.4"
+skim = "0.9.4"
+
+[profile.release]
+opt-level = 3       # Optimize for size
+lto = true          # Enable Link Time Optimization
+codegen-units = 1   # Reduce number of codegen units to increase optimizations
+panic = 'abort'     # Abort on panic

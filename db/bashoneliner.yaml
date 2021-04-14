@@ -1,0 +1,653 @@
+---
+- title: Report disk usage by file type
+  solution: find . -type f -empty -prune -o -type f -printf "%s\t" -exec file --brief
+    --mime-type '{}' \; | awk 'BEGIN {printf("%12s\t%12s\n","bytes","type")} {type=$2;
+    a[type]+=$1} END {for (i in a) printf("%12u\t%12s\n", a[i], i)|"sort -nr"}'
+- title: Find with invert match - e.g. find every file that is not mp3
+  solution: find . -name '*' -type f -not -path '*.mp3'
+- title: Convert pip list --outdated for reuse in pip install -U
+  solution: pip install -U $(pip list --outdated 2&gt; /dev/null | grep -v 'Version'
+    | grep -v '------' | awk '{printf $1 " " }' &amp;&amp; echo)
+- title: Recursively remove all "node_modules" folders
+  solution: find . -name "node_modules" -exec rm -rf '{}' +
+- title: Read other user's shell history, and convert epoch to human-readable date
+  solution: cat /home/john/.bash_history | awk '/#[0-9]*$/ {split($0, arr, "#"); print
+    "#", strftime("%c",arr[2]);getline; print; }'
+- title: Outputs list of $PATH dirs sorted by line length
+  solution: echo -e ${PATH//:/\\n} | awk '{print length, $0}' | sort -n | cut -f2-
+    -d' '
+- title: Generate a sequence of numbers
+  solution: seq 1 10
+- title: Prints "Good" in green if the sha256 sum of a file matches the sum listed
+    in a dist/checksum file and "Bad" in red if it does not match
+  solution: '[[ $(sha256sum _downloaded_file_ | cut -d'' '' -f 1) == $(grep -Po ''\b[a-zA-Z0-9]{64}\b''
+    _checksum_fle_) ]] &amp;&amp; printf "\033[0;32mGood" || printf "\033[0;31mBad"'
+- title: Listen to a song from youtube
+  solution: listen-to-yt() { if [[ -z "$1" ]]; then echo "Enter a search string!";
+    else mpv "$(youtube-dl --default-search 'ytsearch1:' \"$1\" --get-url | tail -1)";
+    fi }
+- title: "(Pseudo)random 6-digit number"
+  solution: let N=0 N=N+10**{0..5}*${RANDOM:0:1}
+- title: Compute factorial of positive integer using only built-ins
+  solution: bang() ( eval let N=1 N*={1..$1} ; echo $N; )
+- title: Recursively compute factorial of positive integer using only built-ins
+  solution: bang() ( IFS=\*; let N=$1-1 k="$*" &amp;&amp; bang $N $k || echo ${2-1}
+    )
+- title: Using a single sudo to run multiple &amp;&amp; arguments
+  solution: sudo -s &lt;&lt;&lt; 'apt update -y &amp;&amp; apt upgrade -y'
+- title: List docker log sizes and remind how to empty them
+  solution: docker ps -qa | xargs docker inspect --format='{{.LogPath}}' | xargs sudo
+    du -hl; sleep 1; printf "\r\n  echo '' &gt; \$(docker inspect --format={{.LogPath}}
+    container_name_or_id) \r\n*****COPY****ABOVE****TO******CLEAR*****LOG*****CHANGE***CONTAINER_ID*******
+    \r\n \n"
+- title: Find files/dirs modified within a given period
+  solution: find . -type d -newermt "2019-01-01" \! -newermt "2019-02-01" -exec ls
+    -ld {} \;
+- title: Scan all open ports without any required program
+  solution: 'for i in {1..65535}; do (echo &lt; /dev/tcp/127.0.0.1/$i) &amp;&gt;/dev/null
+    &amp;&amp; printf "\n[+] Open Port at\n: \t%d\n" "$i" || printf "."; done'
+- title: Extract audio only from video files using ffmpeg
+  solution: ffmpeg -i video.any -vn -acodec libvorbis audio.ogg
+- title: Generate a random 32 characters password
+  solution: tr -dc 'a-zA-Z0-9~!@#$%^&amp;*_()+}{?&gt;&lt;/";.,[]=-' &lt; /dev/urandom
+    | fold -w 32 | head -n 1
+- title: Using tcpdump with port ranges and file count/size
+  solution: 'sudo /usr/sbin/tcpdump -i any -s 0 -n -Z &lt;user_name&gt; -C 500 -W
+    100 -w /home/&lt;user_name&gt;/$(hostname).pcap -f ''(port (# or # or # or # or
+    # or # or ...) or portrange &lt;start&gt;-&lt;end&gt;)'' &amp;&gt;/dev/null'
+- title: Compare (diff) vim-generated backup of a file with that file's current version.
+  solution: diff~() { diff "$1"~ "$1"; }
+- title: Count the total number of hours of your music collection
+  solution: find . -print0 | xargs -0 -P 40 -n 1 sh -c 'ffmpeg -i "$1" 2&gt;&amp;1
+    | grep "Duration:" | cut -d " " -f 4 | sed "s/.$//" | tr "." ":"' - | awk -F ':'
+    '{ sum1+=$1; sum2+=$2; sum3+=$3; sum4+=$4; if (sum4 &gt; 100) { sum3+=1; sum4=0
+    }; if (sum3 &gt; 60) { sum2+=1; sum3=0 }; if (sum2 &gt; 60) { sum1+=1; sum2=0
+    } if (NR % 100 == 0) { printf "%.0f:%.0f:%.0f.%.0f\n", sum1, sum2, sum3, sum4
+    } } END { printf "%.0f:%.0f:%.0f.%.0f\n", sum1, sum2, sum3, sum4 }'
+- title: Print the list of your Git commits this month
+  solution: git log --since='last month' --author="$(git config user.name)" --oneline
+- title: Store the output of find in an array
+  solution: mapfile -d $'\0' arr &lt; &lt;(find /path/to -print0)
+- title: Clear the Exim Queue (remove all messages)
+  solution: exim -bp | exiqgrep -i | xargs exim -Mrm
+- title: Check if a text snippet is valid C code
+  solution: gcc -fsyntax-only -xc - &lt;&lt;&lt; "text snippet"
+- title: Inspect the HTTP headers of a website
+  solution: curl -I amazon.com
+- title: Search man pages and present a PDF
+  solution: man -k . | awk '{ print $1 " " $2 }' | dmenu -i -p man | awk '{ print
+    $2 " " $1 }' | tr -d '()' | xargs man -t | ps2pdf - - | zathura -
+- title: Find all log files modified 24 hours ago, and zip them
+  solution: find . -type f -mtime +1 -name "*.log" -exec zip -m {}.zip {} \; &gt;/dev/null
+- title: List IP addresses connected to your server on port 80
+  solution: 'netstat -tn 2&gt;/dev/null | grep :80 | awk ''{print $5}'' | cut -d:
+    -f1 | sort | uniq -c | sort -nr | head'
+- title: Random 6-digit number
+  solution: python -c 'import random; print(random.randint(0,1000000-1))'
+- title: Very fast history search with Ripgrep
+  solution: rh() { rg "$1" ~/.bash_history }
+- title: While loop to pretty print system load (1, 5 &amp; 15 minutes)
+  solution: 'while :; do date; awk ''{printf "1 minute load: %.2f\n", $1; printf "5
+    minute load: %.2f\n", $2; printf "15 minute load: %.2f\n", $3}'' /proc/loadavg;
+    sleep 3; done'
+- title: Scan entire Git repo for dangerous Amazon Web Service IDs
+  solution: git grep -Ew '[A-Z0-9]{20}'
+- title: Scan entire Git repos for dangerous Amazon Web Service IDs
+  solution: git ls-tree --full-tree -r --name-only HEAD | xargs egrep -w '[A-Z0-9]{20}'
+- title: Dump all AWS IAM users/roles to a Terraform file for editing / reusing in
+    another environment
+  solution: echo iamg iamgm iamgp iamip iamp iampa iamr iamrp iamu iamup | AWS_PROFILE=myprofile
+    xargs -n1  terraforming
+- title: Organise image by portrait and landscape
+  solution: mkdir "portraits"; mkdir "landscapes"; for f in ./*.jpg; do WIDTH=$(identify
+    -format "%w" "$f")&gt; /dev/null; HEIGHT=$(identify -format "%h" "$f")&gt; /dev/null;
+    if [[ "$HEIGHT" &gt; "$WIDTH" ]]; then mv "$f" portraits/ ; else mv "$f" landscapes/
+    ; fi; done
+- title: Create a txt files with 10000 rows
+  solution: for FILE in *.full ; do split -l 100000 $FILE; mv -f xaa `echo "$FILE"
+    | cut -d'.' -f1`.txt; rm -f x*; done
+- title: List open processes ordered by it's number of open files
+  solution: "ps -ef |awk '{ print $2 }' \\ \t|tail -n +2 \\ \t|while read pid; do
+    echo \"$pid\t$(lsof -p $pid |wc -l)\"; done \\ \t|sort -r -n -k 2 \\ \t|while
+    read pid count; do echo \"$pid\t$count\t$(ps -o command= -p $pid)\"; done"
+- title: Remove all container from an specific network (docker)
+  solution: docker ps -a -f network=$NETWORK --format='{{.ID}}' | xargs docker rm
+    -f
+- title: Up all docker services as detached mode over all immediate subdirectories
+  solution: for dir in $(ls -d */); do eval $(cd $PWD/$dir &amp;&amp; docker-compose
+    up -d &amp;&amp; cd ..); done;
+- title: Find and replace string inside specific files
+  solution: grep -ril '$SEARCH_PATTERN' src | sed -i 's/$FIND_PATTERN/$REPLACE_PATTERN/g'
+- title: 'Puppet/Bash:  test compare json objects.'
+  solution: unless =&gt; "client_remote=\"$(curl localhost:9200/_cluster/settings
+    | python -c \"import json,sys;obj=json.load(sys.stdin);print(obj['persistent']['search']['remote'])\")\";
+    new_remote=\"$( echo $persistent_json | python -c \"import json,sys;obj=json.load(sys.stdin);print(obj['persistent']['search']['remote'])\")\";
+    [ \"$client_remote\" = \"$new_remote\" ]",
+- title: Print wifi access points sorted by signal
+  solution: iw dev IFACE scan | egrep "SSID|signal" | awk -F ":" '{print $2}' | sed
+    'N;s/\n/:/' | sort
+- title: Kill a process running on port 8080
+  solution: lsof -i :8080 | awk '{l=$2} END {print l}' | xargs kill
+- title: Delete all untagged Docker images
+  solution: docker images -q -f dangling=true | xargs --no-run-if-empty --delim='\n'
+    docker rmi
+- title: Take values from a list (file) and search them on another file
+  solution: for ITEM in $(cat values_to_search.txt); do  (egrep $ITEM full_values_list.txt
+    &amp;&amp; echo $ITEM found) | grep "found" &gt;&gt; exit_FOUND.txt; done
+- title: Have script run itself in a virtual terminal
+  solution: tty &gt;/dev/null || { urxvt -e /bin/sh -c "tty &gt;/tmp/proc$$; while
+    test x; do sleep 1; done" &amp; while test ! -f /tmp/proc$$; do sleep .1; done;
+    FN=$(cat /tmp/proc$$); rm /tmp/proc$$; exec &gt;$FN 2&gt;$FN &lt;$FN; }
+- title: Big CSV &gt; batches &gt; JSON array &gt; CURL POST data with sleep
+  solution: 'cat post-list.csv | split -l 30 - --filter=''jq -R . | jq --slurp -c
+    .'' | xargs -d "\n" -I % sh -c ''curl -H "Content-Type: application/json" -X POST
+    -d ''"''"''{"type":1,"entries":%}''"''"'' http://127.0.0.1:8080/purge-something
+    &amp;&amp; sleep 30'''
+- title: List all packages with at least a class defined in a JAR file
+  solution: jar tf "$1" | grep '/.*\.class$' | xargs dirname | sort -u | tr / .
+- title: Output an arbitrary number of open TCP or UDP ports in an arbitrary range
+  solution: comm -23 &lt;(seq "$FROM" "$TO") &lt;(ss -tan | awk '{print $4}' | cut
+    -d':' -f2 | grep "[0-9]\{1,5\}" | sort | uniq) | shuf | head -n "$HOWMANY"
+- title: Source without circular reference
+  solution: '[ ! "${LIB}" ] &amp;&amp; ( readonly LIB; . "${ $( cd $( dirname $0 )
+    &amp;&amp; pwd ) }/&lt;path_to&gt;/LIB.sh" )'
+- title: Ternary conditional clause
+  solution: "[ test_statement ] &amp;&amp; ( then_statement ) || ( else_statement
+    );"
+- title: Get executed script's current working directory
+  solution: CWD=$(cd "$(dirname "$0")" &amp;&amp; pwd)
+- title: Random Git Commit
+  solution: git commit -m "$(w3m whatthecommit.com | head -n 1)"
+- title: Blackhole ru zone
+  solution: echo "address=/ru/0.0.0.0" | sudo tee /etc/NetworkManager/dnsmasq.d/dnsmasq-ru-blackhole.conf
+    &amp;&amp; sudo systemctl restart network-manager
+- title: Remove new lines from files and folders
+  solution: rename 's/[\r\n]//g' *
+- title: Retrieve dropped connections from firewalld journaling
+  solution: sudo journalctl -b | grep -o "PROTO=.*" | sed -r 's/(PROTO|SPT|DPT|LEN)=//g'
+    | awk '{print $1, $3}' | sort | uniq -c
+- title: Get the latest Arch Linux news
+  solution: w3m https://www.archlinux.org/ | sed -n "/Latest News/,/Older News/p"
+    | head -n -1
+- title: Make a new folder and cd into it.
+  solution: mkcd(){ NAME=$1; mkdir -p "$NAME"; cd "$NAME"; }
+- title: Listen to the radio (radio2 in example)
+  solution: mpv http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/uk/sbr_med/llnw/bbc_radio_two.m3u8
+- title: Go up to a particular folder
+  solution: alias ph='cd ${PWD%/public_html*}/public_html'
+- title: Open another terminal at current location
+  solution: "$TERMINAL &amp; disown"
+- title: Preserve your fingers from cd ..; cd ..; cd..; cd..;
+  solution: up(){ DEEP=$1; for i in $(seq 1 ${DEEP:-"1"}); do cd ../; done; }
+- title: Get the HTTP status code of a URL
+  solution: curl -Lw '%{http_code}' -s -o /dev/null -I SOME_URL
+- title: Corporate random bullshit generator (cbsg)
+  solution: curl -s http://cbsg.sourceforge.net/cgi-bin/live | grep -Eo '^&lt;li&gt;.*&lt;/li&gt;'
+    | sed s,\&lt;/\\?li\&gt;,,g | shuf -n 1 | cowsay
+- title: List the content of a GitHub repository without cloning it
+  solution: svn ls https://github.com/user/repo/trunk/some/path
+- title: Delete static and dynamic arp for /24 subnet
+  solution: for i in {1..254}; do arp -d 192.168.0.$i; done
+- title: List status of all GIT repos
+  solution: find ~ -name ".git" 2&gt; /dev/null | sed 's/\/.git/\//g' | awk '{print
+    "-------------------------\n\033[1;32mGit Repo:\033[0m " $1; system("git --git-dir="$1".git
+    --work-tree="$1" status")}'
+- title: Shuffle lines
+  solution: "... | perl -MList::Util=shuffle -e 'print shuffle &lt;&gt;;'"
+- title: Create an array of CPU frequencies in GHz
+  solution: cpus=($({ echo scale=2; awk '/cpu MHz/ {print $4 " / 1000"}' /proc/cpuinfo;
+    } | bc))
+- title: Test git archive before actually creating an archive // fake dry run
+  solution: git archive master some/project/subdir | tar t
+- title: Convert all flac files in dir to mp3 320kbps using ffmpeg
+  solution: for FILE in *.flac; do ffmpeg -i "$FILE" -b:a 320k "${FILE[@]/%flac/mp3}";
+    done;
+- title: Get number of all Python Behave scenarios (including all examples from Scenario
+    Outlines)
+  solution: behave -d | grep "scenarios passed" | cut -d, -f4 | sed -e 's/^[[:space:]]*//'
+    | sed 's/untested/scenarios/g'
+- title: Ban all IPs that attempted to access phpmyadmin on your site
+  solution: grep "phpmyadmin" $path_to_access.log | grep -Po "^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+    | sort | uniq | xargs -I% sudo iptables -A INPUT -s % -j DROP
+- title: Get a free shell account on a community server
+  solution: sh &lt;(curl hashbang.sh | gpg)
+- title: Run a command and copy its output to clipboard (Mac OSX)
+  solution: echo "Here comes the output of my failing code" | tee &gt;(pbcopy)
+- title: Nmap scan every interface that is assigned an IP
+  solution: ifconfig -a | grep -Po '\b(?!255)(?:\d{1,3}\.){3}(?!255)\d{1,3}\b' | xargs
+    nmap -A -p0-
+- title: Download a file from a webserver with telnet
+  solution: "(echo 'GET /'; echo; sleep 1; ) | telnet www.google.com 80"
+- title: Print the window title of current mpv session to display what is playing
+  solution: wmctrl -pl | grep $(pidof mpv) | cut -d- -f2-
+- title: Change the encoding of all files in a directory and subdirectories
+  solution: find . -type f  -name '*.java' -exec sh -c 'iconv -f cp1252 -t utf-8 "$1"
+    &gt; converted &amp;&amp; mv converted "$1"' -- {} \;
+- title: Print a flat list of dependencies of a Maven project
+  solution: mvn dependency:list | sed -ne s/..........// -e /patterntoexclude/d -e
+    s/:compile//p -e s/:runtime//p | sort | uniq
+- title: Open Windows internet shortcut (*.url) files in firefox
+  solution: grep -i url='*' file.url | cut -b 5- | xargs firefox
+- title: Remove all at jobs
+  solution: atq | sed 's_\([0-9]\{1,8\}\).*_\1_g' | xargs atrm
+- title: Deletes orphan vim undo files
+  solution: find . -type f -iname '*.un~' | while read UNDOFILE ; do FILE=$( echo
+    "$UNDOFILE" | sed -r -e 's/.un~$//' -e 's&amp;/\.([^/]*)&amp;/\1&amp;' ) ; [[
+    -e "$FILE" ]] || rm "$UNDOFILE" ; done
+- title: Generates random texts
+  solution: tr -dc a-z1-4 &lt;/dev/urandom | tr 1-2 ' \n' | awk 'length==0 || length&gt;50'
+    | tr 3-4 ' ' | sed 's/^ *//' | cat -s | fmt
+- title: Find recent logs that contain the string "Exception"
+  solution: find . -name '*.log' -mtime -2 -exec grep -Hc Exception {} \; | grep -v
+    :0$
+- title: Parse nginx statistics output
+  solution: 'i=$(curl -s server/nginx_stats); IFS=$''\n''; i=($i); a=${i[0]/Active
+    connections: } &amp;&amp; a=${a/ }; r=${i[2]# [0-9]* [0-9]* }; echo "Active: $a,
+    requests: $r"'
+- title: Install profiling versions of all libghc dpkg packages
+  solution: sudo dpkg -l | grep libghc | grep "\-dev" | cut -d " " -f 3 | tr '\n'
+    ' ' | sed -e 's/\-dev/\-prof/g' | xargs sudo apt-get install --yes
+- title: Compute factorial of positive integer
+  solution: fac() { (echo 1; seq $1) | paste -s -d\* | bc; }
+- title: Extensive "cleanup" operations following "sudo yum upgrade"
+  solution: sudo yum upgrade &amp;&amp; for pkg in $(package-cleanup --orphans -q);
+    do repoquery $(rpm -q $pkg --queryformat="%{NAME}") | grep -q ".*" &amp;&amp;
+    echo $pkg; done | xargs sudo yum -y remove &amp;&amp; for pkg in $(package-cleanup
+    --leaves --all -q); do repoquery --groupmember $pkg | grep -q "@" || echo $pkg;
+    done
+- title: Find all files recursively with specified string in the filename and output
+    any lines found containing a different string.
+  solution: find . -name *conf* -exec grep -Hni 'matching_text' {} \; &gt; matching_text.conf.list
+- title: Displays the quantity of connections to port 80 on a per IP basis
+  solution: 'clear;while x=0; do clear;date;echo "";echo "  [Count] | [IP ADDR]";echo
+    "-------------------";netstat -np|grep :80|grep -v LISTEN|awk ''{print $5}''|cut
+    -d: -f1|uniq -c; sleep 5;done'
+- title: Get average CPU temperature from all cores.
+  solution: __=`sensors | grep Core` &amp;&amp; echo \(`echo $__ | sed 's/.*+\(.*\).C\(\s\)\+(.*/\1/g'
+    | tr "\n" "+" | head -c-1`\)\/`echo $__ | wc -l` | bc &amp;&amp; unset __
+- title: Concatenate multiple SSL certificate files to make one PEM file
+  solution: files=("yourcert.crt" "provider.ca.pem") &amp;&amp; for i in ${files[@]}
+    ; do $(cat $i &gt;&gt; yourcert.pem &amp;&amp; echo "" &gt;&gt; yourcert.pem)
+    ; done
+- title: List all non Git comited files and make a gzip archive with them
+  solution: GITFOLDER="/srv/some/folder"   ls-files --others --exclude-standard |
+    tar czf ${GITFOLDER}-archives/uploads-$(date '+%Y%m%d%H%M').tar.gz -T -
+- title: Show 10 Largest Open Files
+  solution: lsof / | awk '{ if($7 &gt; 1048576) print $7/1048576 "MB" " " $9 " " $1
+    }' | sort -n -u | tail
+- title: Extract your external IP address using dig
+  solution: dig +short myip.opendns.com @resolver1.opendns.com
+- title: Remove .DS_Store from the repository you happen to staging by mistake
+  solution: find . -name .DS_Store -exec git rm --ignore-unmatch --cached {} +
+- title: Remove offending key from known_hosts file with one swift move
+  solution: ssh-keygen -R &lt;hostname&gt;
+- title: Check if a file exists and has a size greater than X
+  solution: "[[ $(find /path/to/file -type f -size +51200c 2&gt;/dev/null) ]] &amp;&amp;
+    echo true || echo false"
+- title: Converts DD/MM/YYYY date format to ISO-8601 (YYYY-MM-DD)
+  solution: sed 's_\([0-9]\{1,2\}\)/\([0-9]\{1,2\}\)/\([0-9]\{4\}\)_\3-\2-\1_g'
+- title: Replace sequences of the same characters with a single character
+  solution: echo heeeeeeelllo | sed 's/\(.\)\1\+/\1/g'
+- title: Counting the number of commas in CSV format
+  solution: perl -ne 'print tr/,//, "\n"' &lt; file.csv | sort -u
+- title: Count the lines of each file extension in a list of files
+  solution: git ls-files | xargs wc -l | awk -F ' +|\\.|/' '{ sumlines[$NF] += $2
+    } END { for (ext in sumlines) print ext, sumlines[ext] }'
+- title: Add all unknown files in a Subversion checkout
+  solution: svn add . --force
+- title: Find files that are not executable
+  solution: find /some/path -type f ! -perm -111 -ls
+- title: Find which log files contain or don't contain a specific error message
+  solution: for i in *.log; do grep OutOfMemo $i &gt;/dev/null &amp;&amp; echo $i
+    oom || echo $i ok; done
+- title: Convert text from decimal to little endian hexadecimal
+  solution: echo $(printf %08X 256 | grep -o .. | tac | tr -d '\n')
+- title: Md5sum the last 5 files in a folder
+  solution: find /directory1/directory2/ -maxdepth 1 -type f | sort | tail -n 5 |
+    xargs md5sum
+- title: 'Get mac address from default interface OS X '
+  solution: netstat -rn | awk '/default/ { print $NF }' | head -1 | xargs -I {}  ifconfig
+    {} | awk '/ether/ {print $2}'
+- title: Convert directory of videos to MP4 in parallel
+  solution: for INPUT in *.avi ; do echo "${INPUT%.avi}" ; done | xargs -i -P9  HandBrakeCLI
+    -i "{}".avi -o "{}".mp4
+- title: Create a transparent image of given dimensions
+  solution: convert -size 100x100 xc:none transparency.png
+- title: Print a random cat
+  solution: wget -O - http://placekitten.com/$[500 + RANDOM % 500] | lp
+- title: Create a heap dump of a Java process
+  solution: jmap -dump:format=b,file=/var/tmp/dump.hprof 1234
+- title: Insert lines from one text file to another one
+  solution: awk 'NR % 10 == 1 {getline f2 &lt; "file1"; print f2} 1' file2 | cat -n
+- title: Check that a directory is a parent of another
+  solution: is_parent() { [[ "$2" =~ $1/? ]]; }
+- title: Create fattal tone mapped images from a directory of raw images
+  solution: for img in /path/to/rawimages/*.RW2; do pfsin ${img} | pfssize -x 1024
+    -y 768 | pfstmo_fattal02 -v -s 1 | pfsout /path/to/finished/${img%%}.jpg; done
+- title: Send a file by email as attachment
+  solution: uuencode /var/log/messages messages.txt | mailx -s "/var/log/messages
+    on $HOST" me@example.com
+- title: Calculate md5sum from an input string
+  solution: md5sum &lt;&lt;&lt; YOUR_TEXT | cut -f1 -d' '
+- title: Convert a music file (mp3) to a mp4 video with a static image
+  solution: ffmpeg -loop_input -i cover.jpg -i soundtrack.mp3 -shortest -acodec copy
+    output_video.mp4
+- title: Find all of the distinct file extensions in a folder
+  solution: find . -type f | perl -ne 'print $1 if m/\.([^.\/]+)$/' | sort -u
+- title: Dump network traffic with tcpdump to file with time-stamp in its filename
+  solution: date +"%Y-%m-%d_%H-%M-%Z" | xargs -I {} bash -c "sudo tcpdump -nq -s 0
+    -i eth0 -w ./dump-{}.pcap"
+- title: Get streamed FLV from Chrome with lsof
+  solution: export psid=$(pgrep -f libflashplayer.so); cp /proc/$psid/fd/$(lsof -p
+    $psid | grep eleted | awk {' print $4 '} | sed -e "s/[a-z]//g") saved.flv
+- title: Remove files and directories whose name is a timestamp older than a certain
+    time
+  solution: ls | grep '....-..-..-......' | xargs -I {} bash -c "[[ x{} &lt; x$(date
+    -d '3 days ago' +%Y-%m-%d-%H%M%S) ]] &amp;&amp; rm -rfv {}"
+- title: Tree-like output in ls
+  solution: ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /'
+    -e 's/-/|/'
+- title: Unhide all hidden files in the current directory.
+  solution: find . -maxdepth 1 -type f -name '\.*' | sed -e 's,^\./\.,,' | sort |
+    xargs -iname mv .name name
+- title: Rename all files in a directory to upper case
+  solution: for i in *; do mv "$i" "${i^^}"; done
+- title: Rename all items in a directory to lower case
+  solution: for i in *; do mv "$i" "${i,,}"; done
+- title: Print file owners and permissions of a directory tree
+  solution: find /path/to/dir1 -printf "%U %G %m %p\n" &gt; /tmp/dir1.txt
+- title: Get only the latest version of a file from across mutiple directories.
+  solution: find . -name 'filename' | xargs -r ls -tc | head -n1
+- title: Sort and remove duplicate lines from two (or more files). Display only uniq
+    lines from files.
+  solution: sort file1 file2 | uniq -u
+- title: Get only the latest version of a file from across mutiple directories
+  solution: find . -name custlist\* | perl -ne '$path = $_; s?.*/??; $name = $_; $map{$name}
+    = $path; ++$c; END { print $map{(sort(keys(%map)))[$c-1]} }'
+- title: Create a thumbnail from the first page of a PDF file
+  solution: convert -thumbnail x80 file.pdf[0] thumb.png
+- title: Recreate or update an existing zip file and remove files that do not exist
+    anymore
+  solution: zip --filesync -r /path/to/out.zip /path/to/dir
+- title: How to expand a CIDR notation to its IPs
+  solution: for j in $(seq 0 255); do for i in $(seq 0 255) ; do seq -f "10.$j.$i.%g"
+    0 255; done; done
+- title: Get load average in a more parse-able format
+  solution: python -c 'import os; print os.getloadavg()[0]'
+- title: Function to extract columns from an input stream
+  solution: col() { awk '{print $('$(echo $* | sed -e s/-/NF-/g -e 's/ /),$(/g')')}';
+    }
+- title: Show dd status every so often
+  solution: watch --interval 5 killall -USR1 dd
+- title: Make the output of the `time` builtin easier to parse
+  solution: TIMEFORMAT=%R
+- title: Define an own watch(1)-like function
+  solution: watch () { interrupted=false; trap "interrupted=true" INT; while ! $interrupted;
+    do $*; sleep 1 || interrupted=true; done; }
+- title: Replace the header of all files found.
+  solution: find . -type f -name '*.html' -exec sed -i -e '1r common_header' -e '1,/STRING/d'
+    {} \;
+- title: Remove EXIF data such as orientation from images
+  solution: mogrify -strip /path/to/image.jpg
+- title: Get the last modification date of a file in any format you want
+  solution: date -r /etc/motd +%Y%m%d_%H%M%S
+- title: Forget all remembered path locations
+  solution: hash -r
+- title: Rename files with numeric padding
+  solution: perl -e 'for (@ARGV) { $o = $_; s/\d+/sprintf("%04d", $&amp;)/e; print
+    qq{mv "$o" "$_"\n}}'
+- title: Copy or create files with specific permissions and ownership
+  solution: install -b -m 600 /dev/null NEWFILE
+- title: Redirect stdout to a file you don't have write permission on
+  solution: echo hello | sudo tee -a /path/to/file
+- title: "`tail -f` a file until text is seen"
+  solution: 'tail -f /path/to/file.log | sed ''/^Finished: SUCCESS$/ q'''
+- title: Run command multiple times with a for loop and a sequence expression
+  solution: for i in {1..10}; do date; sleep 1; done
+- title: Recording SSH sessions
+  solution: ssh -l USER HOST | tee -a /path/to/file
+- title: Clear the swap space forcing everything back to main memory in Linux
+  solution: sudo swapoff -a; sudo swapon -a
+- title: Redirection operator to override the noclobber option
+  solution: some_command &gt;| output.txt
+- title: How to set the ip address in Solaris 11
+  solution: ipadm create-addr -T static -a 192.168.1.10/24 eth0/staticaddr
+- title: Record audio from microphone or sound input from the console
+  solution: sox -t ossdsp -w -s -r 44100 -c 2 /dev/dsp -t raw - | lame -x -m s - File.mp3
+- title: Use vim to pretty-print code with syntax highlighting
+  solution: 'vim +''hardcopy &gt; output.ps'' +q style.css '
+- title: Log and verify files received via FTP
+  solution: 'for i in $(cat /var/log/vsftpd.log | grep $DATE_TIME | grep UPLOAD |
+    grep OK); do ls /FTP/HOME/$i &gt;&gt; /dev/null 2&gt; \&amp;1; if \[ $? = 0 \];
+    then echo "$i" &gt;&gt; $FILES_OK_UPLOADS.log; else  echo "$DATE ERROR: File $i
+    not found" &gt;&gt; $FTP_FILES_NOTOK_$DATE_TIME.log; fi; done'
+- title: Edit the Gimp launcher file to disable the splash screen
+  solution: printf '%s\n' ',s/^Exec=[^ ]*/&amp; -s/' w q | ed /usr/share/applications/gimp.desktop
+- title: "`less` is more convenient with the `-F` flag"
+  solution: less -F FILE1
+- title: Append to a file text, a blank line, and the last line of another file
+  solution: "{ echo some text; echo; tail -n1 /var/log/apache2/error.log; } &gt;&gt;
+    /path/to/file"
+- title: Run a local shell script on a remote server without copying it there
+  solution: ssh user@server bash &lt; /path/to/local/script.sh
+- title: Convert a list of terms in slug format to capitalized words
+  solution: sed -e 's/^./\U&amp;/' -e 's/_./\U&amp;/g' -e 's/_/ /g' /path/to/input
+- title: Execute different commands with find depending on file type
+  solution: find /path/to/dir -type d -exec chmod 0755 '{}' \; -o -type f -exec chmod
+    0644 '{}' \;
+- title: Convert m4a files to mp3 using faad and lame
+  solution: faad -o tmp.wav music.m4a &amp;&amp; lame -b 192 tmp.wav music.mp3
+- title: Write both stdout and stderr to the same file
+  solution: do_something.sh &amp;&gt; out.log
+- title: Create or mount an encrypted directory using encfs
+  solution: encfs -i 5 $PWD/raw $PWD/content
+- title: Faster disk imaging with dd
+  solution: dd if=/dev/sda bs=$(hdparm -i /dev/sda | grep BuffSize | cut -d ' ' -f
+    3 | tr [:lower:] [:upper:] | tr -d BUFFSIZE=,) conv=noerror | dd of=image.dd conv=noerror
+- title: Run a never-ending process in the background in a way that you can check
+    on its status anytime
+  solution: screen -d -m -S some_name ping my_router
+- title: Make a hexdump or do the reverse with the xxd command
+  solution: xxd /path/to/binary/file
+- title: Really lazy way to print the first instance of $foo that occurs after $bar
+  solution: ifconfig | grep ^en1 -A5 | grep inet | head -n 1
+- title: Print the first instance of $foo that occurs after $bar
+  solution: sed -n '\@interface Ethernet3/1@,/!/ s/ip address/&amp;/p' file...
+- title: Sort du output in Human-readable format
+  solution: du -hsx * | sort -rh
+- title: Replace symlinks with the actual files they are pointing at
+  solution: 'find /path/to/dir -type l -exec sh -c ''cp --remove-destination "$(readlink
+    "{}")" "{}"'' \; '
+- title: Expire a user's password immediately
+  solution: chage -d 0 USERNAME
+- title: Convert any 16:9 video to play on a QHD widescreen Android phone
+  solution: ffmpeg -i $1 -y -threads 0 -subq 6 -deinterlace -level 30 -f mp4 -acodec
+    libfaac -ab 160k -ar 24000 -ac 2 -vcodec libx264 -b 1000k -maxrate 1000k -bufsize
+    2000k -rc_eq 'blurCplx^(1-qComp)' -qcomp 0.6 -qmin 10 -qmax 51 -qdiff 4 -coder
+    0 -refs 2 -flags +loop -vol 256 -trellis 1 -me_method umh -async 1 $2
+- title: Create a visual report of the contents of a usb drive
+  solution: find /path/to/drive -type f -exec file -b '{}' \; -printf '%s\n' | awk
+    -F , 'NR%2 {i=$1} NR%2==0 {a[i]+=$1} END {for (i in a) printf("%12u %s\n",a[i],i)}'
+    | sort -nr
+- title: Convert a decimal number to octal, hexadecimal, binary, or anything
+  solution: bc &lt;&lt;&lt; 'obase=2;1234'
+- title: Convert from avi format to mp4 encoding
+  solution: ffmpeg -i file.avi file.mp4
+- title: Format input into multiple columns, like a table, useful or pretty-printing
+  solution: mount | column -t
+- title: Resize an image proportionally to some specified width or height
+  solution: mogrify -geometry x31 path/to/image.gif
+- title: Do something in another directory without going there
+  solution: "(cd /path/to/somewhere; tar c .) &gt; somewhere.tar"
+- title: Remove carriage return '\r' character in many files, without looping and
+    intermediary files
+  solution: recode pc..l1 file1 file2 file3
+- title: Find the target path a symlink is pointing to
+  solution: readlink a_symbolic_link_to_somewhere
+- title: Get the octal, hexadecimal and decimal codes of the ASCII character set
+  solution: man ascii
+- title: Sort and remove duplicate lines in a file in one step without intermediary
+    files
+  solution: vi +'%!sort | uniq' +wq file.txt
+- title: Show files containing "foo" and "bar" and "baz"
+  solution: grep -l 'baz' $(grep -l 'bar' $(grep -lr 'foo' *) )
+- title: List or edit and re-execute commands from the history list
+  solution: fc -l
+- title: Find the most recently modified files in a directory and all subdirectories
+  solution: find /path/to/dir -type f -mtime -7 -print0 | xargs -0 ls -lt | head
+- title: List open files
+  solution: lsof -n
+- title: Set a colorful bash prompt per dev test prod environments
+  solution: PS1='\[\e[1;31m\][\u@\h \W]\$\[\e[0m\] '
+- title: Find in files, recursively
+  solution: grep -rn 'nameserver' /etc 2&gt;/dev/null
+- title: Send HTTP POST to a website with a file input field
+  solution: curl -L -v -F "value=@myfile" "http://domain.tld/whatever.php"
+- title: Calculate the total disk space used by a list of files or directories
+  solution: du -cshx ./a ./b
+- title: Create a compressed tar file that rsync will transfer efficiently
+  solution: GZIP='--rsyncable' tar cvzf bobsbackup.tar.gz /home/bob
+- title: Cut select pages from a pdf file and create a new file from those pages.
+  solution: ps2pdf -dFirstPage=3 -dLastPage=10 input.pdf output.pdf
+- title: View a file with line numbers
+  solution: cat -n /path/to/file | less
+- title: Print the lines of file2 that are missing in file1
+  solution: comm -23 file2 file1
+- title: Uses 'at' to run an arbitrary command at a specified time.
+  solution: echo 'play alarmclock.wav 2&gt;/dev/null' | at 07:30 tomorrow
+- title: Calculate an h index from an EndNote export
+  solution: MAX=$(NUM=1;cat author.xml |perl -p -e 's/(Times Cited)/\n$1/g'|grep "Times
+    Cited" |perl -p -e 's/^Times Cited:([0-9]*).*$/$1/g'|sort -nr | while read LINE;
+    do if [ $LINE -ge $NUM ]; then echo "$NUM"; fi; NUM=$[$NUM+1]; done;); echo "$MAX"|tail
+    -1
+- title: Re-compress a gzip (.gz) file to a bzip2 (.bz2) file
+  solution: time gzip -cd file1.tar.gz 2&gt;~/logfile.txt | pv -t -r -b -W -i 5 -B
+    8M | bzip2 &gt; file1.tar.bz2 2&gt;&gt;~/logfile .txt
+- title: Test your hard drive speed
+  solution: time (dd if=/dev/zero of=zerofile bs=1M count=500;sync);rm zerofile
+- title: Recursively remove all empty sub-directories from a directory tree
+  solution: find . -depth  -type d  -empty -exec rmdir {} \;
+- title: Group count sort a log file
+  solution: A=$(FILE=/var/log/myfile.log; cat $FILE | perl -p -e 's/.*,([A-Z]+)[\:\+].*/$1/g'
+    | sort -u | while read LINE; do grep "$LINE" $FILE | wc -l | perl -p -e 's/[^0-9]+//g';
+    echo -e "\t$LINE"; done;);echo "$A"|sort -nr
+- title: Use ghostscript to shrink PDF files
+  solution: gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook -dNOPAUSE
+    -dQUIET -dBATCH -sOutputFile=output.pdf input.pdf
+- title: How to find all hard links to a file
+  solution: find /home -xdev -samefile file1
+- title: Find all the unique 4-letter words in a text
+  solution: cat ipsum.txt | perl -ne 'print map("$_\n", m/\w+/g);' | tr A-Z a-z |
+    sort | uniq | awk 'length($1) == 4 {print}'
+- title: Concatenate PDF files using GhostScript
+  solution: gs -dNOPAUSE -sDEVICE=pdfwrite -sOUTPUTFILE=output.pdf -dBATCH file1.pdf
+    file2.pdf file3.pdf
+- title: Format text with long lines to text with fixed width
+  solution: fmt -s -w80 file.txt
+- title: Come back quickly to the current directory after doing some temporary work
+    somewhere else
+  solution: pushd /some/where/else; work; cd /somewhere; work; cd /another/place;
+    popd
+- title: Export a git project to a directory
+  solution: git archive master | tar x -C /path/to/dir/to/export
+- title: Delete all tables of a mysql database
+  solution: mysql --defaults-file=my.cnf -e 'show tables' | while read t; do mysql
+    --defaults-file=my.cnt  -e 'drop table '$t; done
+- title: Run remote X11 applications with ssh
+  solution: ssh -X servername
+- title: Concatenate two or more movie files into one using mencoder
+  solution: mencoder cd1.avi cd2.avi -o movie.avi -ovc copy -oac copy
+- title: Calculate the average execution time (of short running scripts) with awk
+  solution: for i in {1..10}; do time some_script.sh; done 2&gt;&amp;1 | grep ^real
+    | sed -e s/.*m// | awk '{sum += $1} END {print sum / NR}'
+- title: Check the performance of a script by re-running many times while measuring
+    the running time
+  solution: for i in {1..10}; do time curl http://localhost:8000 &gt;/dev/null; done
+    2&gt;&amp;1 | grep real
+- title: A convenient way to re-run the previous command with sudo
+  solution: sudo !!
+- title: Put an ssh session in the background
+  solution: "~^z"
+- title: Rotate a movie file with mencoder
+  solution: mencoder video.avi -o rotated-right.avi -oac copy -ovc lavc -vf rotate=1
+- title: Remove all the versioned-but-empty directories from a Subversion checkout
+  solution: find . -name .svn -type d | while read ss; do dir=$(dirname "$ss"); test
+    $(ls -a "$dir" | wc -l) == 3 &amp;&amp; echo "svn rm \"$dir\""; done
+- title: Create a sequence of integer numbers
+  solution: echo {4..-9}
+- title: Redirect the output of the time builtin command
+  solution: "{ time command; } &gt; out.out 2&gt; time+err.out"
+- title: Copy a directory with a large number of files to another server
+  solution: tar cp -C /path/to/dir . | ssh server2 'tar x -C /path/to/target'
+- title: 'Redirect the output of multiple commands '
+  solution: "{ cmd1 ; cmd2 ; cmd3 ; } &gt; out.out 2&gt; err.out"
+- title: Print the n-th and m-th line of a file
+  solution: sed -ne '101 p' -e '106 p' /path/to/the/file
+- title: Repeat the previous command but with a string replacement
+  solution: "^geomtry^geometry"
+- title: Rename all files in the current directory by capitalizing the first letter
+    of every word in the filenames
+  solution: ls | perl -ne 'chomp; $f=$_; tr/A-Z/a-z/; s/(?&lt;![.'"'"'])\b\w/\u$&amp;/g;
+    print qq{mv "$f" "$_"\n}'
+- title: Do not save command history of current bash session
+  solution: HISTFILE=
+- title: Use rsync instead of cp to get a progress indicator when copying large files
+  solution: rsync --progress largefile.gz somewhere/else/
+- title: Unpack all of the .tar.bz2  files in current directory
+  solution: for FILE in *; do tar -jxf $FILE; done
+- title: Create and restore backups using cpio
+  solution: find . -xdev -print0 | cpio -oa0V | gzip &gt; path_to_save.cpio.gz
+- title: Alert me by email when a disconnected or unreachable server comes back online
+  solution: while ! ping -c1 the_host_down; do sleep 1; done &amp;&amp; date | mail
+    -s 'the host is back!' me@example.com
+- title: Add timestamp to the output of ping
+  solution: 'ping some_host | while read LINE; do echo $(date): $LINE; done'
+- title: Test a one-liner with echo commands first, pipe to bash when ready
+  solution: paste &lt;(ls) &lt;(ls | tr A-Z a-z) | while read OLD NEW; do echo mv
+    -v $OLD $NEW; done | sh
+- title: View specific column of data from a large file with long lines
+  solution: cat /tmp/log.data |colrm 1 155|colrm 60 300
+- title: Delete unversioned files in a Subversion checkout directory and all subdirectories
+  solution: svn st | grep ^? | sed -e 's/^? *//' | xargs -i{} echo rm -fr "{}"
+- title: Get the available space on a partition as a single numeric value
+  solution: df /path/to/dir | sed -ne 2p | awk '{print $4}'
+- title: Schedule a one-time task using "at" command and intuitive date specifications
+  solution: at now + 30 minutes
+- title: Aliases the ls command to display the way I like it
+  solution: alias ls='ls -lhGpt --color=always'
+- title: Remove spaces recursively from all subdirectories of a directory
+  solution: find /path/to/dir -type d | tac | while read LINE; do target=$(dirname
+    "$LINE")/$(basename "$LINE" | tr -d ' '); echo mv "$LINE" "$target"; done
+- title: Replace a regexp pattern in many files at once
+  solution: vi +'bufdo %s/pattern/replacement/g | update' +q $(grep -rl pattern /path/to/dir)
+- title: The first command you should run right after you login to a remote server
+    ;-)
+  solution: screen
+- title: Find video files cached by the flash plugin in browsers
+  solution: 'file /proc/*/fd/* 2&gt;/dev/null | grep Flash | cut -f1 -d:'
+- title: Force the preferred language when downloading a web page with wget
+  solution: 'wget -–header=''Accept-Language: en-us'' http://www.timeanddate.com/calendar/index.html?year=2008&amp;country=26
+    -O calendar.html'
+- title: Burn the contents of a directory to dvd without needing a gui application
+  solution: growisofs -dvd-compat -Z /dev/scd0 -R -J -pad /path/to/dir
+- title: Convert all flac files in the current directory to mp3 format using "lame"
+  solution: for i in *.flac; do flac -c -d "$i" | lame -m j -b 192 -s 44.1 - "${i%.flac}.mp3";
+    done
+- title: Halt the system in Linux without the halt command or gui
+  solution: echo o &gt; /proc/sysrq-trigger
+- title: Change to the previous directory, a shortcut for "cd $OLDPWD"
+  solution: cd -
+- title: Create an encrypted tar file with openssl
+  solution: tar c paths_to_files_and_dirs | gzip -c | openssl des3 &gt; encrypted.tar.gz
+- title: Make another user superuser in Ubuntu
+  solution: for i in $(grep :boss /etc/group | cut -f1 -d:); do adduser wife $i; done
+- title: Change the label of a USB drive in Linux without a gui
+  solution: sudo mlabel -i /dev/sdd1 ::NewLabel
+- title: Mirror from one Subversion repository to another Subversion repository
+  solution: bzr co https://repo1/proj1/trunk proj1 &amp;&amp; cd proj1 &amp;&amp;
+    bzr push https://repo2/vendor/proj1/trunk
+- title: Rename all files in a directory to lowercase names
+  solution: paste &lt;(ls) &lt;(ls | tr A-Z a-z) | while read OLD NEW; do echo mv
+    -v $OLD $NEW; done
+- title: Find Flash videos stored by browsers on a Mac
+  solution: find /private/ 2&gt;/dev/null | grep /Flash
