@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 yaml-rust = "0.4"
 skim = "0.9.4"
+dirs = "3.0.1"
 
 [profile.release]
 opt-level = 3       # Optimize for size
