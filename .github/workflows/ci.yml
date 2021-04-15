@@ -16,11 +16,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: clippy
+    - name: cargo clippy
       run: cargo clippy --verbose --all-features -- -D warnings
 
-    - name: build
+    - name: cargo build
       run: cargo build --verbose
 
-    - name: run tests
+    - name: cargo test
       run: cargo test --verbose
