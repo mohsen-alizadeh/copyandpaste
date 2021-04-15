@@ -2,7 +2,7 @@ use skim::prelude::*;
 mod config;
 mod item;
 
-fn main() -> std::io::Result<()> {
+fn main() {
     config::init();
 
     let options = SkimOptionsBuilder::default()
@@ -17,11 +17,9 @@ fn main() -> std::io::Result<()> {
 
     let selected_items = Skim::run_with(&options, Some(rx_item))
         .map(|out| out.selected_items)
-        .unwrap_or_else(|| Vec::new());
+        .unwrap_or_else(Vec::new);
 
     for item in selected_items.iter() {
-        print!("{}{}", item.output(), "\n");
+        println!("{}", item.output());
     }
-
-    Ok(())
 }
