@@ -20,10 +20,7 @@ impl SkimItem for Item {
 
 impl Item {
     fn new(title: String, solution: String) -> Item {
-        Item {
-            title: title,
-            solution: solution,
-        }
+        Item { title, solution }
     }
 }
 
